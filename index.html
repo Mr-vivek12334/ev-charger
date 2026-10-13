@@ -84,7 +84,7 @@
     input[type="range"] {
       width: 100%;
       margin: 15px 0;
-      accent-color: #38A169; /* EV Green */
+      accent-color: #38A169;
     }
     
     .price-display {
@@ -216,9 +216,7 @@
         }
       }
       
-      // Hide all steps
       document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
-      // Show target step
       document.getElementById('step-' + step).classList.add('active');
     }
 
@@ -228,7 +226,6 @@
       goToStep(3);
     }
 
-    // Function to sync slider and input box
     function syncTime(source) {
       let input = document.getElementById("time-input");
       let slider = document.getElementById("time-slider");
@@ -238,7 +235,6 @@
       
       if (source === 'input') {
         mins = parseInt(input.value) || 0;
-        // Don't strict bound immediately while typing, but update slider if valid
         if (mins >= 5 && mins <= 300) {
           slider.value = mins;
         }
@@ -247,27 +243,21 @@
         input.value = mins;
       }
       
-      // Calculate and display price
       let total = (mins * pricePerMinute).toFixed(2);
       priceDisplay.innerText = "₹" + total;
     }
 
-    // Function to calculate final amount in paise and call Razorpay
     function processPayment() {
       let mins = parseInt(document.getElementById("time-input").value);
       
-      // Final validation before payment
       if (isNaN(mins) || mins < 5 || mins > 300) {
         alert("Please enter a valid time between 5 and 300 minutes.");
-        // Reset to minimum
         document.getElementById("time-input").value = 5;
         syncTime('input');
         return;
       }
 
-      // Convert rupees to paise (e.g. ₹7.50 * 100 = 750 paise)
       let amountInPaise = Math.round(mins * pricePerMinute * 100);
-      
       startRazorpay(amountInPaise, mins);
     }
 
@@ -280,7 +270,25 @@
         "description": chosenSocket + " - " + timeInMins + " mins Charging",
         "handler": function (response) {
            alert("Payment Success! Payment ID: " + response.razorpay_payment_id);
-           // NEXT PHASE: Trigger ESP32 backend logic here
+           
+           // Notify Render backend to trigger hardware
+           fetch("https://ev-charger-68rn.onrender.com/activate-socket", {
+             method: "POST",
+             headers: {
+               "Content-Type": "application/json"
+             },
+             body: JSON.stringify({
+               socket: chosenSocket,
+               durationMins: timeInMins
+             })
+           })
+           .then(res => res.json())
+           .then(data => {
+             if(data.success) {
+               alert(chosenSocket + " activated for " + timeInMins + " minutes!");
+             }
+           })
+           .catch(err => console.error("Backend error:", err));
         },
         "prefill": {
           "contact": userMobile
