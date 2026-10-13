@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>College EV Charger</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        .btn { padding: 15px 30px; margin: 10px; font-size: 18px; cursor: pointer; background: #3399cc; color: white; border: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h2>Socket 1: Fast Charger</h2>
+    <p>Select your charging time:</p>
+    
+    <button class="btn" onclick="startPayment(2000, 10)">10 Mins (₹20)</button>
+    <button class="btn" onclick="startPayment(4000, 20)">20 Mins (₹40)</button>
+
+    <!-- This script loads Razorpay's popup system -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+        function startPayment(amountInPaise, timeInMins) {
+            var options = {
+                "key": "Er7i02mcnCUythJPJK00WHRK", // PASTE YOUR KEY ID HERE
+                "amount": amountInPaise, 
+                "currency": "INR",
+                "name": "College EV Project",
+                "description": "Charging for " + timeInMins + " minutes",
+                "handler": function (response){
+                    // This function runs ONLY when payment is successful
+                    alert("Payment Success! Payment ID: " + response.razorpay_payment_id);
+                    
+                    // NEXT PHASE: Here we will send a message to the ESP32 to turn on!
+                },
+                "theme": { "color": "#3399cc" }
+            };
+            var rzp = new Razorpay(options);
+            rzp.open();
+        }
+    </script>
+</body>
+</html>
