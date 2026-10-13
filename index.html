@@ -1,40 +1,228 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>College EV Charger</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        .btn { padding: 15px 30px; margin: 10px; font-size: 18px; cursor: pointer; background: #3399cc; color: white; border: none; border-radius: 5px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>REC - EV Charging Station</title>
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      text-align: center; 
+      margin: 0; 
+      padding: 0;
+      background-color: #f0f4f8;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    
+    /* Header Styling */
+    .header {
+      background-color: #1A365D; /* Professional College Blue */
+      color: white;
+      padding: 20px 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: 1px;
+    }
+    .header p {
+      margin: 5px 0 0 0;
+      font-size: 16px;
+      color: #48BB78; /* EV Green Accent */
+      font-weight: bold;
+    }
+
+    /* Main Container */
+    .container {
+      max-width: 400px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      flex: 1;
+      width: 90%;
+    }
+    
+    .step { display: none; }
+    .step.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    h3 {
+      color: #2D3748;
+      margin-bottom: 20px;
+    }
+
+    input[type="tel"] { 
+      padding: 14px; 
+      width: 85%; 
+      font-size: 16px; 
+      margin-bottom: 20px; 
+      border: 2px solid #E2E8F0;
+      border-radius: 8px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    input[type="tel"]:focus {
+      border-color: #3182CE;
+    }
+
+    button { 
+      padding: 14px 20px; 
+      margin: 10px 0; 
+      font-size: 16px; 
+      font-weight: bold;
+      cursor: pointer; 
+      background: #3182CE; 
+      color: white; 
+      border: none; 
+      border-radius: 8px; 
+      width: 100%;
+      transition: background 0.3s, transform 0.1s;
+    }
+    button:hover { background: #2B6CB0; }
+    button:active { transform: scale(0.98); }
+    
+    .back-btn { background: #E2E8F0; color: #4A5568; margin-top: 15px; }
+    .back-btn:hover { background: #CBD5E0; }
+
+    #selected-socket-label {
+      color: #38A169;
+      font-weight: bold;
+      margin-bottom: 15px;
+      display: inline-block;
+      padding: 5px 15px;
+      background: #E6FFFA;
+      border-radius: 20px;
+    }
+
+    /* Footer Styling */
+    .footer {
+      background-color: #2D3748;
+      color: #E2E8F0;
+      padding: 20px;
+      font-size: 14px;
+      line-height: 1.6;
+      margin-top: auto;
+    }
+    .footer p { margin: 5px 0; }
+    .heart { color: #FC8181; }
+  </style>
 </head>
 <body>
-    <h2>Socket 1: Fast Charger</h2>
-    <p>Select your charging time:</p>
-    
-    <button class="btn" onclick="startPayment(2000, 10)">10 Mins (₹20)</button>
-    <button class="btn" onclick="startPayment(4000, 20)">20 Mins (₹40)</button>
 
-    <!-- This script loads Razorpay's popup system -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-    <script>
-        function startPayment(amountInPaise, timeInMins) {
-            var options = {
-                "key": "rzp_test_TnDy8iIVVCcNFK", // PASTE YOUR KEY ID HERE
-                "amount": amountInPaise, 
-                "currency": "INR",
-                "name": "College EV Project",
-                "description": "Charging for " + timeInMins + " minutes",
-                "handler": function (response){
-                    // This function runs ONLY when payment is successful
-                    alert("Payment Success! Payment ID: " + response.razorpay_payment_id);
-                    
-                    // NEXT PHASE: Here we will send a message to the ESP32 to turn on!
-                },
-                "theme": { "color": "#3399cc" }
-            };
-            var rzp = new Razorpay(options);
-            rzp.open();
+  <!-- Header -->
+  <div class="header">
+    <h1>Rewa Engineering College</h1>
+    <p>⚡ EV Fast Charging Station</p>
+  </div>
+
+  <!-- Interactive Flow -->
+  <div class="container">
+    
+    <!-- STEP 1: Mobile Number -->
+    <div id="step-1" class="step active">
+      <h3>Step 1: Enter Mobile Number</h3>
+      <input type="tel" id="mobile" placeholder="e.g. 9876543210" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+      <button onclick="goToStep(2)">Proceed</button>
+    </div>
+
+    <!-- STEP 2: Select Socket -->
+    <div id="step-2" class="step">
+      <h3>Step 2: Select Socket</h3>
+      <button onclick="selectSocket('Socket 1')">🔌 Socket 1</button>
+      <button onclick="selectSocket('Socket 2')">🔌 Socket 2</button>
+      <button onclick="selectSocket('Socket 3')">🔌 Socket 3</button>
+      <button class="back-btn" onclick="goToStep(1)">← Back</button>
+    </div>
+
+    <!-- STEP 3: Select Time -->
+    <div id="step-3" class="step">
+      <div id="selected-socket-label"></div>
+      <h3>Step 3: Select Charging Time</h3>
+      <button onclick="startPayment(2000, 10)">⏱️ 10 Mins (₹20)</button>
+      <button onclick="startPayment(4000, 20)">⏱️ 20 Mins (₹40)</button>
+      <button class="back-btn" onclick="goToStep(2)">← Back</button>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <p>Developed with <span class="heart">❤️</span> by the Students of the EE Department</p>
+    <p>Under the guidance of Prof. Anant Srivastava</p>
+  </div>
+
+  <!-- Razorpay SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  
+  <script>
+    let userMobile = "";
+    let chosenSocket = "";
+
+    function goToStep(step) {
+      if (step === 2) {
+        userMobile = document.getElementById("mobile").value;
+        if (!userMobile || userMobile.length !== 10) {
+          alert("Please enter a valid 10-digit mobile number.");
+          return;
         }
-    </script>
+      }
+      
+      // Hide all steps
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      // Show target step
+      document.getElementById('step-' + step).classList.add('active');
+    }
+
+    function selectSocket(socket) {
+      chosenSocket = socket;
+      document.getElementById('selected-socket-label').innerText = "Selected: " + socket;
+      goToStep(3);
+    }
+
+    function startPayment(amountInPaise, timeInMins) {
+      var options = {
+        "key": "rzp_test_TnDy8iIVVCcNFK",
+        "amount": amountInPaise,
+        "currency": "INR",
+        "name": "Rewa Engineering College",
+        "description": chosenSocket + " - " + timeInMins + " mins Charging",
+        "handler": function (response) {
+           alert("Payment Success! Payment ID: " + response.razorpay_payment_id);
+           // NEXT PHASE: Trigger ESP32 backend logic here
+        },
+        "prefill": {
+          "contact": userMobile
+        },
+        "config": {
+          "display": {
+            "blocks": {
+              "upi_first": {
+                "name": "Pay via UPI",
+                "instruments": [
+                  { "method": "upi" }
+                ]
+              }
+            },
+            "sequence": ["block.upi_first"],
+            "preferences": {
+              "show_default_blocks": true
+            }
+          }
+        },
+        "theme": {
+          "color": "#1A365D"
+        }
+      };
+      
+      var rzp = new Razorpay(options);
+      rzp.open();
+    }
+  </script>
 </body>
 </html>
